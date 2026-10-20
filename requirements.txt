@@ -1,0 +1,9 @@
+torch
+torchvision
+timm
+open_clip_torch
+numpy
+Pillow
+PyYAML
+tqdm
+tensorboardX

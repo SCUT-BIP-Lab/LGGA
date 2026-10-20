@@ -1,0 +1,98 @@
+seed: 7
+
+task:
+  type: MG #MG SG FG
+  name: mask_guided02P02_physio_behavior612h02_modular_direct384_temporalmotion_windowpool_histproto_22_050502_brvis7
+  src_dir: ../src
+  work_dir : ../workdir
+
+model:
+  model_file_name: model_dinov3_clip_mask_guided_physio_behavior_modular_direct384_temporalmotion_windowpool_histproto
+  model_class_name: Model_DINOv3_CLIP_MaskGuidedPhysioBehaviorModularDirect384TemporalMotionWindowPoolHistProto
+  resume_from: None # None or path to checkpoint file to resume training from
+  model_name: vit_small_plus_patch16_dinov3.lvd1689m  #vit_base_patch16_dinov3_qkvb.lvd1689m vit_small_plus_patch16_dinov3
+  stage_channels: 96
+  stage_channels_list: 96,96,96,96
+  fusion_channels: 384
+  clip_model_name: ViT-B-16
+  clip_pretrained: openai
+  text_proj_hidden_dim: 192
+  temporal_text_proj_hidden_dim: 192
+  text_proj_dropout: 0.2
+
+  # Independent attention heads for each semantic module.
+  mtvi_text_refine_heads: 8
+  mtvi_xattn_heads: 6
+  pamg_text_refine_heads: 8
+  pamg_xattn_heads: 12
+  tgtm_text_refine_heads: 8
+
+  # Independent attention dropouts for easier ablation/debugging.
+  mtvi_text_refine_dropout: 0.2
+  mtvi_xattn_dropout: 0.2
+  pamg_text_refine_dropout: 0.2
+  pamg_xattn_dropout: 0.2
+  tgtm_text_refine_dropout: 0.2
+
+  temporal_rate_strides: 1,2,4
+  motion_cue_dropout: 0.2
+  tgtm_motion_cue_dropout: 0.2
+  part_attn_loss_weight: 0.2
+  mask_hidden_channels: 32
+  mask_refine_hidden_channels: 16
+  mask_output_size: 56
+
+dataset:
+  dataset_file_name: dataset_DHGA
+  dataset_class_name: Dataset_DHGA
+  use_keypoints: true
+  keypoint_root: /data/work/datasets/DHGAdataset/DHG-Auth/keypoints_wxl
+  keypoint_normalize_size: 200.0
+  part_heatmap_size: 56
+  part_heatmap_output_size: 56
+  part_heatmap_sigma: 0.05
+
+  frames_per_video: 22 # frames sampled
+
+  train_sources:
+    - name: dhg_auth_train
+      root: /data/work/datasets/DHGAdataset/DHG-Auth/
+      metadata_root: /data/work/datasets/DHGAdataset/DHG-Auth/metadata
+      frames_per_sample: 64
+      subsets: color_background,hand_mask_RMBG #color_background
+      label_file: train_MG.csv
+
+  eval_sources:
+    - name: dhg_auth_eval
+      root: /data/work/datasets/DHGAdataset/DHG-Auth/
+      metadata_root: /data/work/datasets/DHGAdataset/DHG-Auth/metadata
+      frames_per_sample: 64
+      subsets: color_background
+      label_files: test_cross_session_SG_gesture1.csv,test_cross_session_SG_gesture2.csv,test_cross_session_SG_gesture3.csv,test_cross_session_SG_gesture4.csv,test_cross_session_SG_gesture5.csv,test_cross_session_SG_gesture6.csv
+    - name: dhg_real_eval
+      root: /data/work/datasets/DHGAdataset/Real-DHGA/
+      metadata_root: /data/work/datasets/DHGAdataset/Real-DHGA/metadata
+      frames_per_sample: 120
+      subsets: color
+      label_files: test_single_session_gesture1_0_60.csv,test_single_session_gesture2_0_60.csv,test_single_session_gesture3_0_60.csv,test_single_session_gesture4_0_60.csv,test_single_session_gesture5_0_60.csv,test_single_session_gesture6_0_60.csv,test_single_session_gesture7_0_60.csv,test_single_session_gesture8_0_60.csv,test_single_session_gesture9_0_60.csv,test_single_session_gesture10_0_60.csv
+
+
+train:
+  num_epochs: 100
+  lr: 0, 0.00005 # learning rates for different parameter groups, [pretrained,new]
+  pretrained_lr_step: 25 # epoch at which to reduce the learning rate for pretrained parameters
+  new_lr_step: 5 # epoch at which to reduce the learning rate for new parameters
+  lr_gamma: 0.2 # factor by which to reduce the learning rate at each step
+  min_new_lr: 0.000001 # stop decaying the new parameter group below this value
+  min_pretrained_lr: 0.0 # stop decaying the pretrained parameter group below this value
+
+  batch_size: 6
+  num_workers: 8
+
+  optimizer: adam
+
+evaluate:
+  eval_interval: 1 # evaluate every n epochs
+
+  batch_size: 6
+  num_workers: 8

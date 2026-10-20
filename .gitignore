@@ -1,0 +1,7 @@
+# Model implementation is withheld during peer review.
+/src/model/model_dinov3_clip_mask_guided_physio_behavior_modular_direct384_temporalmotion_windowpool_histproto.py
+
+# Generated files and local outputs.
+__pycache__/
+*.py[cod]
+/workdir/
